@@ -12,7 +12,7 @@
 
 
 #define DEBUG 1
-#define LED 2 
+#define CONTROL 2                        //温控信号线接到D3
 #define DHTPIN 3                         // 传感器连接到D3 -- Sensor to D3
 #define DHTTYPE DHT11                     // DHT 11 
 
@@ -67,11 +67,11 @@ void readReponseContent(char* content, size_t maxSize)
     //  size_t length = client.peekBytes(content, maxSize);
     size_t length = client.readBytes(content, maxSize);
     delay(20);
-    Serial.println(length);
-    Serial.println("Get the data from Internet!"); //获取到数据 -- Get the data
+    //Serial.println(length);
+    //Serial.println("Get the data from Internet!"); //获取到数据 -- Get the data
     content[length] = 0;
-    Serial.println(content);
-    Serial.println("Read Over!");
+    //Serial.println(content);
+    //Serial.println("Read Over!");
 }
 //
 // 解析数据存储到传入的结构体中 -- Save data to userData struct
@@ -101,15 +101,17 @@ bool parseUserData_test(char* content, struct UserData* userData)
     {
       userData->recived_val = root["data"]["datastreams"][0]["datapoints"][0]["value"];
       strcpy(userData->udate_at, root["data"]["datastreams"][0]["datapoints"][0]["at"]);
-      Serial.print("Recived Value : ");
+      //Serial.print("Recived Value : ");
+      Serial.print("Control temp : ");
       Serial.print(userData->recived_val);
       Serial.print("\t The last update time : ");
       Serial.println(userData->udate_at);
     }
-    Serial.print("errno : ");
-    Serial.print(userData->errno_val);
-    Serial.print("\t error : ");
-    Serial.println(userData->error);
+    //提示报错信息
+    //Serial.print("errno : ");
+    //Serial.print(userData->errno_val);
+    //Serial.print("\t error : ");
+    //Serial.println(userData->error);
   
     return true;
 }
@@ -120,7 +122,7 @@ bool parseUserData_test(char* content, struct UserData* userData)
 //
 int readData(int dId, char dataStream[])
 {
-    // 创建发送请求的URL -- We now create a URI for the request
+    // 创建发送请求的URL -- We now create a URL for the request
     String url = "/devices/";
     url += String(dId);
     url += "/datapoints?datastream_id=";
@@ -136,7 +138,7 @@ int readData(int dId, char dataStream[])
     // 调试模式串口打印发送的指令 -- The request will be printed if we choose the DEBUG mode
     if (DEBUG)
     {
-      Serial.println(send_data);
+      //Serial.println(send_data);
     }
     unsigned long timeout = millis();
     while (client.available() == 0) 
@@ -157,7 +159,7 @@ int readData(int dId, char dataStream[])
       UserData userData_LEDstatus;
       if (parseUserData_test(response, &userData_LEDstatus)) 
       {
-        Serial.println("Data parse OK!");
+        //Serial.println("Data parse OK!\n");
         return userData_LEDstatus.recived_val;
       }
      }
@@ -167,7 +169,7 @@ int readData(int dId, char dataStream[])
 //
 void postData(int dId, float val_t, float val_h) 
 {
-    // 创建发送请求的URL -- We now create a URI for the request
+    // 创建发送请求的URL -- We now create a URL for the request
     String url = "/devices/";
     url += String(dId);
     url += "/datapoints?type=3";           
@@ -186,7 +188,9 @@ void postData(int dId, float val_t, float val_h)
     // 调试模式串口打印发送的指令 -- The request will be printed if we choose the DEBUG mode
     if (DEBUG)
     {
-        Serial.println(post_data);  
+        //Serial.println(post_data);  
+        Serial.println(data); 
+        //Serial.println("\n"); 
     }
     unsigned long timeout = millis();
     while (client.available() == 0) 
@@ -200,12 +204,12 @@ void postData(int dId, float val_t, float val_h)
     }
 }
 
-
 void setup() 
 {
-    WiFi.mode(WIFI_AP_STA);               //设置工作模式 -- set work mode:  WIFI_AP /WIFI_STA /WIFI_AP_STA
+    //设置工作模式 -- set work mode:  WIFI_AP /WIFI_STA /WIFI_AP_STA
+    WiFi.mode(WIFI_AP_STA);               //https://blog.csdn.net/qq_39171574/article/details/104830755
     Serial.begin(115200);
-    pinMode(LED, OUTPUT);
+    pinMode(CONTROL, OUTPUT);
     delay(10);
 
     Serial.println("");
@@ -223,22 +227,28 @@ void setup()
     Serial.println("WiFi connected");
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    Serial.print("\n\n");
     // 传感器打开 -- We start the DHT11
 //    dht.begin();
 }
 
 void loop() 
 {
+    //优雅的调试用分割线
+    Serial.println("**************************************************");
     delay(2000);
     // 默认摄氏度 -- Read temperature as Celsius (the default)
-    temp = 29; //dht.readTemperature(); 
-    humi = 80; //dht.readHumidity();
+    temp = 20+random(10); //暂时设定让它产生20~30的随机数    //dht.readTemperature(); 
+    humi = 70+random(10); //暂时设定让它产生70~80的随机数    //dht.readHumidity();
+
+/*
     // 检查传感器数据是否正确 -- Check if any reads failed and exit early (to try again).
     if (isnan(temp) || isnan(humi)) 
     {
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
+*/
     //建立连接并判断 -- Connecting to server
     if (!client.connect(OneNetServer, tcpPort)) 
     {
@@ -247,10 +257,10 @@ void loop()
     }
     //上传数据 -- post value
     postData(DeviceId, temp, humi);
-    Serial.println("closing connection");
+    //Serial.println("closing connection\n");
 
-    //控制数据刷新时间间隔 1000=1s
-    delay(10000);
+    //控制数据刷新时间间隔/ms
+    delay(3000);
     
     //建立连接并判断 -- Connecting to server
     if (!client.connect(OneNetServer, tcpPort)) 
@@ -258,8 +268,9 @@ void loop()
       Serial.println("connection failed");
       return;
     }
+    
     //从云端获取值并存于ctrl_temp -- get data from server
     ctrl_temp=readData(DeviceId, "ctrl_temp");
-//    analogWrite(LED, stream1);
-    Serial.println("closing connection");
+//  analogWrite(CONTROL, ctrl_temp);
+    //Serial.println("closing connection\n\n");
 }
