@@ -1,0 +1,21 @@
+
+
+<!-- <canvas class = "canvas" id="chart2"
+canvas-id="light"></canvas> -->
+
+<canvas class = "canvas" id="chart3"
+canvas-id="tempe"></canvas>
+
+<canvas class = "canvas" id="chart1"
+canvas-id="humidity"></canvas>
+
+<form bindsubmit="formBindsubmit">
+  <view class="main">
+    <label>温度：</label>
+    <input name="ctrl_temp" placeholder="点我设置温度" />
+  </view>
+  <view style="display:flex;margin-top:30px;">
+    <button style="width:30%;" formType="submit" >设置</button>
+  </view>
+</form>
+<view>{{ctrl_temp}}</view>

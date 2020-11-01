@@ -1,12 +1,13 @@
 {
   "pages": [
-    "pages/start/start",
-    "pages/wifi_station/tianqi/tianqi"
+    
+    "pages/Car_temp_ctrl/shouye/shouye",
+    "pages/start/start"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "Wi-Fi 气象站",
+    "navigationBarTitleText": "车内温湿度实时检测",
     "navigationBarTextStyle": "black",
     "enablePullDownRefresh": true
   },

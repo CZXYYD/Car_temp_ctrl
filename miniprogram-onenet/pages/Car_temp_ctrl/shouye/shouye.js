@@ -1,12 +1,36 @@
 var myCharts = require("../../../utils/wxcharts.js")//引入一个绘图的插件
 
 const devicesId = "643781453" // 填写在OneNet上获得的devicesId 形式就是一串数字 例子:9939133
-const api_key ="nOa=1z1nshTPcj9a8iPTyKBKoLw=" 
-// 填写在OneNet上的 api-key 例子: VeFI0HZ44Qn5dZO14AuLbWSlSlI=
+const api_key ="nOa=1z1nshTPcj9a8iPTyKBKoLw=" // 填写在OneNet上的 api-key 例子: VeFI0HZ44Qn5dZO14AuLbWSlSlI=
 
 Page({
-  data: {},
+  data: {
+    ctrl_temp:0
+  },
 
+  formBindsubmit: function (e) {
+    this.setData({
+      ctrl_temp: e.detail.value.ctrl_temp
+    })
+    //上传数据到onenet
+    wx.request({
+      url: "https://api.heclouds.com/devices/643781453/datapoints",
+      header: {
+        'content-type': 'application/json',
+        'api-key': api_key
+      },
+      method:'POST',
+      data:JSON.stringify({
+        "datastreams":[{
+          "id":"ctrl_temp",
+          "datapoints":[{
+            "value":this.data.ctrl_temp
+          }]
+        }]
+      })
+    })
+
+  },
   /**
    * @description 页面下拉刷新事件
    */
@@ -20,7 +44,8 @@ Page({
     }).catch((error) => {
       wx.hideLoading()
       console.error(error)
-    })
+    });
+    wx.stopPullDownRefresh();
   },
 
   /**
@@ -29,7 +54,7 @@ Page({
   onLoad: function () {
     console.log(`your deviceId: ${devicesId}, apiKey: ${api_key}`)
 
-    //每隔6s自动获取一次数据进行更新
+    //每隔5s自动获取一次数据进行更新
     const timer = setInterval(() => {
       this.getDatapoints().then(datapoints => {
         this.update(datapoints)
@@ -58,9 +83,6 @@ Page({
     return new Promise((resolve, reject) => {
       wx.request({
         url:"https://api.heclouds.com/devices/643781453/datapoints?datastream_id=HUMI,TEMP&limit=20",
-        // 'https://api.heclouds.com/devices/${devicesId}/datapoints?datastream_id=Temperature,Humidity&limit=20',
-        //'http://api.heclouds.com/devices/${devicesId}/datapoints?datastream_id=Cartemp',
-        //'https://api.heclouds.com/devices/${devicesId}/datapoints?datastream_id=Temperature,Humidity&limit=20',
         /**
          * 添加HTTP报文的请求头, 
          * 其中api-key为OneNet的api文档要求我们添加的鉴权秘钥
@@ -110,7 +132,7 @@ Page({
     this.lineChart_hum.updateData({
       categories: wheatherData.categories,
       series: [{
-        name: 'humidity',
+        name: '湿度',
         data: wheatherData.humidity,
         format: (val, name) => val.toFixed(2)
       }],
@@ -119,7 +141,7 @@ Page({
     this.lineChart_tempe.updateData({
       categories: wheatherData.categories,
       series: [{
-        name: 'tempe',
+        name: '温度',
         data: wheatherData.tempe,
         format: (val, name) => val.toFixed(2)
       }],
@@ -176,7 +198,7 @@ Page({
       animation: false,
       background: '#f5f5f5',
       series: [{
-        name: 'humidity',
+        name: '湿度',
         data: wheatherData.humidity,
         format: function (val, name) {
           return val.toFixed(2);
@@ -186,7 +208,7 @@ Page({
         disableGrid: true
       },
       yAxis: {
-        title: 'humidity (%)',
+        title: '湿度 (%)',
         format: function (val) {
           return val.toFixed(2);
         }
@@ -208,7 +230,7 @@ Page({
       animation: false,
       background: '#f5f5f5',
       series: [{
-        name: 'temperature',
+        name: '温度',
         data: wheatherData.tempe,
         format: function (val, name) {
           return val.toFixed(2);
@@ -218,7 +240,7 @@ Page({
         disableGrid: true
       },
       yAxis: {
-        title: 'temperature (摄氏度)',
+        title: '温度 (摄氏度)',
         format: function (val) {
           return val.toFixed(2);
         }

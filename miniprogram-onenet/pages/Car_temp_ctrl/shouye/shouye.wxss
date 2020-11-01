@@ -14,3 +14,9 @@
 #chart3{
   top: 20rpx
 }
+
+.main{
+  display: flex;
+  justify-content: center;  
+  text-align: center；
+}
