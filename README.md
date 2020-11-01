@@ -1,7 +1,6 @@
 ## 微信小程序端示例
 
 1. 下载测试样例代码至本地
-
 2. 使用微信开发者工具导入此项目, 填写自己的appid, 打开详情面板, **勾选不校验合法域名**
 
 3. 打开**pages/wifi_station/tianqi/tianqi.js**, 将`devicesId`, `api_key`**替换为自己的**
